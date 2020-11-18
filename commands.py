@@ -32,7 +32,8 @@ class GofmtCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         code, output, error = exec(gofmt, substr(self.view))
         if code != 0:
-            return print("{}: {}".format(gofmt, error))
+            print("{}: {}".format(gofmt, error))
+            return
         replace(edit, self.view, output)
 
 class GofmtListener(sublime_plugin.EventListener):
@@ -44,14 +45,13 @@ class GodefCommand(sublime_plugin.WindowCommand):
     def run(self):
         view = self.window.active_view()
         offset = selection_offset_bytes(view)
-
         cmd = godef + ["-i", "-f", view.file_name(), "-o", str(offset)]
         code, output, error = exec(cmd, substr(view), cwd=os.path.dirname(view.file_name()))
         if code != 0:
-            return print("{}: {}".format(cmd, error))
-
+            self.window.status_message(error)
+            return
         filename, *_ = output.split(":")
         if not os.path.isfile(filename):
-            return print("{}: path not found: {}".format(cmd, output))
-
+            self.window.status_message("path not found: " + output)
+            return
         self.window.open_file(output, sublime.ENCODED_POSITION)
