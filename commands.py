@@ -1,7 +1,7 @@
 import sublime
 import sublime_plugin
 import subprocess
-from os.path import dirname
+import os.path
 
 gofmt = ["goimports"]
 godef = ["godef"]
@@ -14,24 +14,26 @@ def exec(args, input=None, cwd=None):
     output, error = p.communicate(input)
     return p.returncode, output.decode(), error.decode().strip()
 
-def regionAll(view):
-    return sublime.Region(0, view.size())
+def substr(view, a=0, b=None):
+    b = b if b is not None else view.size()
+    return view.substr(sublime.Region(a, b))
 
-def substrAll(view):
-    return view.substr(regionAll(view))
+def replace(edit, view, string, a=0, b=None):
+    b = b if b is not None else view.size()
+    view.replace(edit, sublime.Region(a, b), string)
 
-def replaceAll(edit, view, string):
-    view.replace(edit, regionAll(view), string)
-
-def selectionOffset(view):
+def selection_offset(view):
     return view.sel()[0].begin()
+
+def selection_offset_bytes(view):
+    return len(substr(view, b=selection_offset(view)).encode())
 
 class GofmtCommand(sublime_plugin.TextCommand):
     def run(self, edit):
-        code, output, error = exec(gofmt, substrAll(self.view))
+        code, output, error = exec(gofmt, substr(self.view))
         if code != 0:
             return print("{}: {}".format(gofmt, error))
-        replaceAll(edit, self.view, output)
+        replace(edit, self.view, output)
 
 class GofmtListener(sublime_plugin.EventListener):
     def on_pre_save(self, view):
@@ -41,14 +43,15 @@ class GofmtListener(sublime_plugin.EventListener):
 class GodefCommand(sublime_plugin.WindowCommand):
     def run(self):
         view = self.window.active_view()
+        offset = selection_offset_bytes(view)
 
-        cmd = godef + ["-f", view.file_name(), "-o", str(selectionOffset(view))]
-        input = None
-        if view.is_dirty():
-            cmd.append("-i")
-            input = substrAll(view)
-        code, output, error = exec(cmd, input, cwd=dirname(view.file_name()))
+        cmd = godef + ["-i", "-f", view.file_name(), "-o", str(offset)]
+        code, output, error = exec(cmd, substr(view), cwd=os.path.dirname(view.file_name()))
         if code != 0:
             return print("{}: {}".format(cmd, error))
+
+        filename, *_ = output.split(":")
+        if not os.path.isfile(filename):
+            return print("{}: path not found: {}".format(cmd, output))
 
         self.window.open_file(output, sublime.ENCODED_POSITION)
