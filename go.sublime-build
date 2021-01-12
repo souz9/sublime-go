@@ -1,0 +1,12 @@
+{
+    "cmd": ["go", "run", "."],
+
+    "selector": "source.go",
+    "file_regex": "(\\S+\\.go):(\\d+):(\\d+)?:? ?(.*)$",
+    "quiet": true,
+
+    "variants": [{
+        "name": "test",
+        "cmd": ["go", "test", "-count=1", "-timeout=10s"],
+    }]
+}
