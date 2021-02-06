@@ -2,7 +2,7 @@
     "cmd": ["go", "run", "."],
 
     "selector": "source.go",
-    "file_regex": "(\\S+\\.go):(\\d+):(\\d+)?:? ?(.*)$",
+    "file_regex": "^\\s*([\\w/.-]+\\.go):(\\d+):(\\d+)?:? ?(.*)$",
     "quiet": true,
 
     "variants": [{
