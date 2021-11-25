@@ -1,5 +1,5 @@
 {
-    "cmd": ["go", "run", "."],
+    "cmd": ["go", "run", "$file"],
 
     "selector": "source.go",
     "file_regex": "^\\s*([\\w/.-]+\\.go):(\\d+):(\\d+)?:? ?(.*)$",
