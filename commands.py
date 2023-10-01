@@ -30,7 +30,8 @@ def selection_offset_bytes(view):
 
 class GofmtCommand(sublime_plugin.TextCommand):
     def run(self, edit):
-        code, output, error = exec(gofmt, substr(self.view))
+        folder = os.path.dirname(self.view.file_name())
+        code, output, error = exec(gofmt, substr(self.view), cwd=folder)
         if code != 0:
             print("{}: {}".format(gofmt, error))
             return
